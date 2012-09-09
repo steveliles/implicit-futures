@@ -6,7 +6,7 @@ In other words what you want is an _implicit_ future, where the client code does
 
 	class Undesirable {
 	    public void doSomething(SomeService aService) {
-	        Future&lt;MyResult> _future = aService.provideResult();
+	        Future<MyResult> _future = aService.provideResult();
 	       
 	        // .. do some other stuff
 	       
