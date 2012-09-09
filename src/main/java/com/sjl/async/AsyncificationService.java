@@ -1,6 +1,6 @@
 package com.sjl.async;
 
-public interface ImplicitFutureService {
+public interface AsyncificationService {
 
 	/**
 	 * @param a type whose apparently synchronous methods should be made asynchronous 
