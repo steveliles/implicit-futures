@@ -103,7 +103,7 @@ Still thinking about this bit ..
 	
 .. pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
 
-Deciding which methods to asyncify might be guided by annotations - @Async/NotAsync? @Promissable? @ComputationallyIntensive?
+Deciding which methods to asyncify might be guided by annotations - @Async/NotAsync? @Promisable? @ComputationallyIntensive?
 
 ## Cautionary Note
 
