@@ -21,7 +21,7 @@ public class ResponseTimeSLA implements ServiceLevelAgreement {
 	
 	@Override
 	public boolean isExceeded() {
-		return timeRemaining() > 0;
+		return timeRemaining() <= 0;
 	}
 
 	@Override
