@@ -16,6 +16,7 @@ public class DynamicProxyAsyncificationServiceTest {
 	private Service synchronous;
 	private ReturnType1 firstResult;
 	private ReturnType2 secondResult;
+	private ReturnType3 thirdResult;
 	
 	@Before
 	public void setup() {
@@ -25,6 +26,7 @@ public class DynamicProxyAsyncificationServiceTest {
 		synchronous = ctx.mock(Service.class);
 		firstResult = ctx.mock(ReturnType1.class);
 		secondResult = ctx.mock(ReturnType2.class);
+		thirdResult = ctx.mock(ReturnType3.class);
 		
 		async = new DynamicProxyAsyncificationService(promissory);
 	}
@@ -36,7 +38,7 @@ public class DynamicProxyAsyncificationServiceTest {
 		
 	@SuppressWarnings("unchecked")
 	@Test
-	public void createsImplicitFuturesAroundAllMethodReturns() {
+	public void createsImplicitFuturesAroundAllMethodReturnsMarkedComputationallyExpensive() {
 		ctx.checking(new Expectations() {{
 			oneOf(promissory).promise(with(any(Fulfilment.class)));
 			will(returnValue(firstResult));
@@ -45,7 +47,7 @@ public class DynamicProxyAsyncificationServiceTest {
 			will(returnValue(secondResult));
 			
 			oneOf(firstResult).getValue1(); will(returnValue("first"));
-			oneOf(secondResult).getValue2(); will(returnValue("second"));
+			oneOf(secondResult).getValue2(); will(returnValue("second"));			
 		}});
 		
 		Service _asynchronised = async.makeAsync(synchronous);
@@ -56,6 +58,17 @@ public class DynamicProxyAsyncificationServiceTest {
 		Assert.assertEquals("second", _r2.getValue2());
 	}
 	
+	public void invokesUnmarkedMethodsSynchronously() {
+		ctx.checking(new Expectations() {{
+			oneOf(synchronous).third(); will(returnValue(thirdResult));
+			oneOf(thirdResult).getValue3(); will(returnValue("third"));
+		}});
+		
+		Service _asynchronised = async.makeAsync(synchronous);
+		ReturnType3 _r3 = _asynchronised.third();
+		Assert.assertEquals("third", _r3.getValue3());
+	}
+	
 	interface ReturnType1 {
 		public String getValue1();
 	}
@@ -64,8 +77,17 @@ public class DynamicProxyAsyncificationServiceTest {
 		public String getValue2();
 	}
 	
+	interface ReturnType3 {
+		public String getValue3();
+	}
+	
 	interface Service {
+		@ComputationallyIntensive
 		public ReturnType1 first();
+		
+		@ComputationallyIntensive
 		public ReturnType2 second();
+		
+		public ReturnType3 third();
 	}
 }
