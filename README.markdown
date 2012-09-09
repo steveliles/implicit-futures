@@ -26,6 +26,8 @@ In other words what you want is an _implicit_ future, where the client code does
 	    }
     }
 
+The full impact of the difference doesn't really show until you want to pass around MyResult to other collaborators of the above classes. The further MyResult travels from the original call site, the more desirable implicit future's become.
+
 You can achieve this manually by implementing the interface T with a proxy that delegates to the Future via its `T get()` method. This is tedious and error-prone, so it would be nice if you could instead have some machinery that automatically did that proxying for you. Perhaps something like this:
 
 	interface ProxyingService {
