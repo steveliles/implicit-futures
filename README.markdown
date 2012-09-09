@@ -56,11 +56,8 @@ We actually need to be able to do a little more housekeeping, for example defini
 	
 	interface Fulfilment<T> {
 	    public Class<T> getResultType();
-    
     	public T execute();
-    
     	public T createDefaultResult();
-    
     	public void onException(Exception anExc);
 	}
 	
@@ -78,3 +75,28 @@ Now when we want to issue an Implicit Future in response to a method call (lets 
     
 Not bad, we can return an object of the desired type which is a transparent Implicit Future, and we can deal with exceptions raised during the realisation of the promised result.
 
+## Service Level Agreements
+
+Java's explicit Future class has realisation methods that allow the caller to give up after waiting a specified length of time for the result to be realised. We can use this to implement SLA's for our implicit futures and realise them with default values if the SLA is breached.
+
+We could do this with an additional method on `PromissoryService` that accepts an SLA parameter:
+
+	interface PromissoryService {
+    	public <T> T promise(Fulfilment<T> aPromise);
+    	public <T> T attempt(Fulfilment<T> aPromise, ServiceLevelAgreement anSLA);
+	}
+	
+	interface ServiceLevelAgreement {
+	    public boolean isBreached();
+	    public <T> T get(Future<T> aFuture);
+	}
+
+## Asyncification
+
+Still thinking about this bit ..
+
+	interface AsyncificationService {
+	    public <T> T makeAsync(T aT);
+	}
+	
+.. pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
