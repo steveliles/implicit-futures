@@ -103,6 +103,12 @@ Still thinking about this bit ..
 	
 .. pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
 
+Deciding which methods to asyncify might be guided by annotations - @Async/NotAsync? @Promissable? @ComputationallyIntensive?
+
+## Cautionary Note
+
+Java is not Erlang. Java threads are pretty heavy-weight. There is overhead entailed by context-switching. You do not want to go making every single method of every single class return implicit futures just because you can - exercise judgement and return futures only when appropriate.
+
 ## Current Implementation
 
 The only current implementation of PromissoryService uses dynamic proxying. This has some downsides:
