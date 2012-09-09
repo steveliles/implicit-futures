@@ -4,6 +4,8 @@ Java has [_explicit_ futures](http://en.wikipedia.org/wiki/Futures_and_promises)
 
 In other words what you want is an _implicit_ future, where the client code doesn't know or care whether it is dealing with a fully realised &lt;T> or an implementation that may actually be working in the background to fulfill the promise of &lt;T>.
 
+Just as with explicit futures, the _implicit_ future should block the calling thread if its value is not yet realised, and return when the value is available. The calling thread doesn't need to know anything about this.
+
 	class Undesirable {
 	    public void doSomething(SomeService aService) {
 	        Future<MyResult> _future = aService.provideResult();
@@ -77,6 +79,8 @@ Now when we want to issue an Implicit Future in response to a method call (lets 
     
 Not bad, we can return an object of the desired type which is a transparent Implicit Future, and we can deal with exceptions raised during the realisation of the promised result.
 
+When you create a PromissoryService you will pass it an ExecutorService to which it can submit work to realise its implicit futures. This allows you to control the way in which threads are created and managed.
+
 ## Service Level Agreements
 
 Java's explicit Future class has realisation methods that allow the caller to give up after waiting a specified length of time for the result to be realised. We can use this to implement SLA's for our implicit futures and realise them with default values if the SLA is breached.
@@ -97,10 +101,22 @@ A simple response-time SLA implementation is provided - `ResponseTimeSLA`. SLA's
 
 Some or all of the activities may complete within the SLA response time. Those that do not complete within the SLA will "breach" and return default results.
 
-	class CoordinatedAttempts {
+    interface A {  
+        // ..
+    }
+
+    interface B {  
+        // ..
+    }
+    
+    interface C {  
+        // ..
+    }
+
+	class Calculator {
 	    PromissoryService promissory = ..;
 	
-	    public CombinedResult doSomething() {
+	    public CombinedResult calculate() {
 	        ServiceLevelAgreement _sla = 
 	        	ResponseTimeSLA.nanosFromNow(Nanoseconds.fromSeconds(2L));
 	        	
@@ -112,29 +128,94 @@ Some or all of the activities may complete within the SLA response time. Those t
 	    }
 	    
 	    private Fulfilment<A> calculateA() {
-	        return new FulfilmentAdapter<A>() { .. };
+	        return new FulfilmentAdapter<A>() { 
+	            public A execute() {
+	                // expensive calculations to realise A here..
+	                return _a;
+	            }
+            };
 	    }
 	    
 	    private Fulfilment<B> calculateB() {
-	        return new FulfilmentAdapter<B>() { .. };
+	        return new FulfilmentAdapter<B>() {
+	            public B execute() {
+	                // expensive calculations to realise B here..
+	                return _b;
+	            }
+            };
 	    }
 	    
 	    private Fulfilment<C> calculateC() {
-	        return new FulfilmentAdapter<C>() { .. };
+	        return new FulfilmentAdapter<C>() { 
+	            public C execute() {
+	                // expensive calculations here..
+	                return _c;
+	            }
+            };
 	    }
 	}
 
 ## Asyncification
 
-Still thinking about this bit ..
+This is still experimental. We want to be able to remove even more of the boiler plate from converting a synchronous method to return implicit futures. Imagine if we had another service:
 
 	interface AsyncificationService {
 	    public <T> T makeAsync(T aT);
 	}
 	
-.. pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
+Pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
 
-Deciding which methods to asyncify might be guided by annotations - @Async/NotAsync? @Promisable? @ComputationallyIntensive?
+Deciding which methods to asyncify can be guided by use of the annotation `@ComputationallyIntensive`.
+
+Rewriting the `Calculator` example from above in terms of AsyncificationService:
+
+	interface Calculator {
+	    public CombinedResult calculate();
+	    @ComputationallyIntensive public A calculateA();
+	    @ComputationallyIntensive public B calculateB();
+	    @ComputationallyIntensive public C calculateC();
+	}
+	
+	class SynchronousCalculator implements Calculator {
+	
+	    public CombinedResult calculate() {
+	        return new CombinedResult(
+	        	calculateA(), calculateB(), calculateC());
+	    }
+	    
+	    public A calculateA() {
+	        // expensive computations here..
+	        return _a;
+	    }
+	    
+	    public B calculateB() {
+	    	// expensive computations here..
+	        return _b;
+	    }
+	    
+	    public C calculateC() {
+	        // expensive computations here..
+	        return _c;
+	    }
+    }
+    
+.. and to get hold of, and invoke, an asynchronised version of Calculator:
+
+    AsyncificationService _service = ..;
+    Calculator _sync = new SynchronousCalculator();
+    Calculator _async = _async.makeAsync(_sync);
+    
+    // calculations all occur synchronously, all results
+    // fully realised before this method call returns.
+    // Returned object is a "normal" pojo.
+    CombinedResult _r1 = _sync.calculate(); 
+                       
+    // calculations occur asynchronously, this method
+    // call returns almost immediately and probably
+    // before any of the calculations are completed.
+    // Returned object is a pojo containing 3 implicit
+    // futures (A, B and C)
+    CombinedResult _r2 = _async.calculate(); 
 
 ## Cautionary Note
 
@@ -142,7 +223,7 @@ Java is not Erlang. Java threads are pretty heavy-weight. There is overhead enta
 
 ## Current Implementation
 
-The only current implementation of PromissoryService uses dynamic proxying. This has some downsides:
+The current implementation of PromissoryService uses dynamic proxying. This has some downsides:
 
 1. Only interfaces can be proxied, so you can only promise to fulfill return-types which are interfaces.
 2. Creating the first proxy for any class entails some overhead.
