@@ -100,3 +100,13 @@ Still thinking about this bit ..
 	}
 	
 .. pushing an object through makeAsync would wrap it in a proxy which automagically fulfils some or all of its methods via the PromissoryService (and hence with implicit futures).
+
+## Current Implementation
+
+The only current implementation of PromissoryService uses dynamic proxying. This has some downsides:
+
+1. Only interfaces can be proxied, so you can only promise to fulfill return-types which are interfaces.
+2. Creating the first proxy for any class entails some overhead.
+3. Invocation of proxied methods is by reflection, hence some (small) overhead per invocation.
+
+At least (1) and (3) can be overcome with an implementation that uses runtime class generation in favour of java's built-in dynamic proxying - for example using CGLib or Javassist.
