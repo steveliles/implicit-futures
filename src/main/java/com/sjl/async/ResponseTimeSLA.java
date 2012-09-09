@@ -32,6 +32,7 @@ public class ResponseTimeSLA implements ServiceLevelAgreement {
 
 	public ResponseTimeSLA start() {
 		startTime = System.nanoTime();
+		
 		return this;
 	}
 	

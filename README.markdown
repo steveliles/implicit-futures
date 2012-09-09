@@ -92,6 +92,37 @@ We could do this with an additional method on `PromissoryService` that accepts a
 	    public boolean isBreached();
 	    public <T> T get(Future<T> aFuture);
 	}
+	
+A simple response-time SLA implementation is provided - `ResponseTimeSLA`. SLA's can be used for multiple `attempt` invocations, which allows you to coordinate several concurrent activities.
+
+Some or all of the activities may complete within the SLA response time. Those that do not complete within the SLA will "breach" and return default results.
+
+	class CoordinatedAttempts {
+	    PromissoryService promissory = ..;
+	
+	    public CombinedResult doSomething() {
+	        ServiceLevelAgreement _sla = 
+	        	ResponseTimeSLA.nanosFromNow(Nanoseconds.fromSeconds(2L));
+	        	
+	        A _a = promissory.attempt(calculateA(), _sla);
+	        B _b = promissory.attempt(calculateB(), _sla);
+	        C _c = promissory.attempt(calculateC(), _sla);
+	        	
+	        return new CombinedResult(_a, _b, _c);
+	    }
+	    
+	    private Fulfilment<A> calculateA() {
+	        return new FulfilmentAdapter<A>() { .. };
+	    }
+	    
+	    private Fulfilment<B> calculateB() {
+	        return new FulfilmentAdapter<B>() { .. };
+	    }
+	    
+	    private Fulfilment<C> calculateC() {
+	        return new FulfilmentAdapter<C>() { .. };
+	    }
+	}
 
 ## Asyncification
 
