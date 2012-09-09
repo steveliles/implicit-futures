@@ -223,9 +223,9 @@ Java is not Erlang. Java threads are pretty heavy-weight. There is overhead enta
 
 ## Current Implementation
 
-The current implementation of PromissoryService uses dynamic proxying. This has some downsides:
+The current implementations of `PromissoryService` and `AsyncificationService` use dynamic proxying. This has some downsides:
 
-1. Only interfaces can be proxied, so you can only promise to fulfill return-types which are interfaces.
+1. Only interfaces can be proxied, so you can only promise to fulfill return-types which are interfaces, and you can only asyncify methods which implement methods of an interface.
 2. Creating the first proxy for any class entails some overhead.
 3. Invocation of proxied methods is by reflection, hence some (small) overhead per invocation.
 
