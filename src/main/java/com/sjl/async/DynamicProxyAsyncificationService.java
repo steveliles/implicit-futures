@@ -35,9 +35,25 @@ public class DynamicProxyAsyncificationService implements AsyncificationService 
 	
 	private <T> T promise(final T aT, final Method aMethod, final Object[] anArgs) {
 		return promissory.promise(new FulfilmentAdapter<T>((Class<T>)aT.getClass()) {
+			private RuntimeException exc;
+			
 			@Override
 			public T execute() {
 				return invoke(aT, aMethod, anArgs);
+			}
+
+			@Override
+			public T createDefaultResult() {
+				throw exc;
+			}
+
+			@Override
+			public void onException(Throwable anExc) {
+				if (RuntimeException.class.isAssignableFrom(anExc.getClass())) {
+					exc = (RuntimeException) anExc;
+				} else {
+					exc = new RuntimeException(anExc);
+				}
 			}
 		});
 	}

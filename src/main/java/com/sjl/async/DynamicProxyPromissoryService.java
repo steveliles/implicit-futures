@@ -1,11 +1,7 @@
 package com.sjl.async;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
+import java.lang.reflect.*;
+import java.util.concurrent.*;
 
 public class DynamicProxyPromissoryService implements PromissoryService
 {
@@ -27,9 +23,9 @@ public class DynamicProxyPromissoryService implements PromissoryService
             executor.submit(newCallableTask(aPromise)), ServiceLevelAgreement.NULL_OBJECT)
         {
             @Override
-            protected void whenExecutionException(Exception anExc)
+            protected void whenExecutionException(Throwable anExc)
             {
-                aPromise.onException(anExc);
+            	aPromise.onException((Exception)anExc);
             }
 
             @Override
@@ -47,7 +43,7 @@ public class DynamicProxyPromissoryService implements PromissoryService
             @Override
             public Object invoke(Object aProxy, Method aMethod, Object[] aArgs) throws Throwable
             {
-                return _f.get();
+            	return aMethod.invoke(_f.get(), aArgs);
             }
         });
     }
@@ -68,7 +64,7 @@ public class DynamicProxyPromissoryService implements PromissoryService
             }
 
             @Override
-            protected void whenExecutionException(Exception anExc)
+            protected void whenExecutionException(Throwable anExc)
             {
                 aPromise.onException(anExc);
             }

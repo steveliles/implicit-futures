@@ -70,9 +70,9 @@ public class FutureWithSLA<T>
         {            
             return getDefaultResult();
         }
-        catch (Exception anExc)
+        catch (ExecutionException anExc)
         {            
-            whenExecutionException(anExc);
+            whenExecutionException(anExc.getCause());
             return getDefaultResult();
         }        
     }
@@ -96,7 +96,7 @@ public class FutureWithSLA<T>
     {        
     }
     
-    protected void whenExecutionException(Exception anExc)
+    protected void whenExecutionException(Throwable anExc)
     {        
     }       
     

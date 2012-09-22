@@ -1,11 +1,7 @@
 package com.sjl.async;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.jmock.*;
+import org.junit.*;
 
 public class DynamicProxyAsyncificationServiceTest {
 
@@ -58,6 +54,7 @@ public class DynamicProxyAsyncificationServiceTest {
 		Assert.assertEquals("second", _r2.getValue2());
 	}
 	
+	@Test
 	public void invokesUnmarkedMethodsSynchronously() {
 		ctx.checking(new Expectations() {{
 			oneOf(synchronous).third(); will(returnValue(thirdResult));
@@ -67,6 +64,14 @@ public class DynamicProxyAsyncificationServiceTest {
 		Service _asynchronised = async.makeAsync(synchronous);
 		ReturnType3 _r3 = _asynchronised.third();
 		Assert.assertEquals("third", _r3.getValue3());
+	}
+	
+	@Test
+	public void createsFulfilmentsThatCaptureExceptionsForDelayedPropagation() {
+		// capture the fulfilment, invoke onException
+		// then invoke createDefaultResult,
+		// check that createDefaultResult throws our exception
+		// wrapped in a RuntimeExc if necessary
 	}
 	
 	interface ReturnType1 {

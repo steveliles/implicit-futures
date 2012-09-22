@@ -4,11 +4,11 @@ public interface Fulfilment<T>
 {
     public Class<T> getResultType();
     
-    public T execute();
+    public T execute() throws Exception;
     
     public T createDefaultResult();
     
-    public void onException(Exception anExc);
+    public void onException(Throwable anExc);
     
     public void onBreachSLA(ServiceLevelAgreement anSLA);
 }

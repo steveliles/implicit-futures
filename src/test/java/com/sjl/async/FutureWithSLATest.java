@@ -158,7 +158,7 @@ public class FutureWithSLATest {
 
 		FutureWithSLA<String> _fws = new FutureWithSLA<String>(future, sla) {
 			@Override
-			protected void whenExecutionException(Exception anExc) {
+			protected void whenExecutionException(Throwable anExc) {
 				_pokeable.poke();
 			}
 		};

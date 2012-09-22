@@ -29,7 +29,7 @@ public abstract class FulfilmentAdapter<T> implements Fulfilment<T>
     }
 
     @Override
-    public void onException(Exception anExc)
+    public void onException(Throwable anExc)
     {       
     }
 
