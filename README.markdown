@@ -108,6 +108,12 @@ Some or all of the activities may complete within the SLA response time. Those t
     interface C {  
         // ..
     }
+    
+    interface CombinedResult {
+       A getA();
+       B getB();
+       C getC();
+    }
 
 	class Calculator {
 	    PromissoryService promissory = ..;
@@ -153,7 +159,9 @@ Some or all of the activities may complete within the SLA response time. Those t
 
 ## Asyncification
 
-This is still experimental. We want to be able to remove even more of the boiler plate from converting a synchronous method to return implicit futures. Imagine if we had another service:
+This is still experimental.
+
+We want to be able to remove even more of the boiler plate from converting a synchronous method to return implicit futures. Imagine if we had another service:
 
 	interface AsyncificationService {
 	    public <T> T makeAsync(T aT);
@@ -211,7 +219,35 @@ Rewriting the `Calculator` example from above in terms of AsyncificationService:
     // before any of the calculations are completed.
     // Returned object is a pojo containing 3 implicit
     // futures (A, B and C)
-    CombinedResult _r2 = _async.calculate(); 
+    CombinedResult _r2 = _async.calculate();
+    
+When using a synchronous service, exceptions are thrown and can be handled at the call site. However, with asyncified services, exceptions thrown by the underlying synchronous service are trapped and propagated later, _when methods of the return-type are invoked_. 
+
+For example:
+
+    Calculator _sync = new SynchronousCalculator();
+    Calculator _async = _async.makeAsync(_sync);
+
+    try {    
+    	CombinedResult _r1 = _sync.calculate(); // exc thrown here
+    } catch (Exception anExc) {
+        // exception thrown during calculation
+        // will be handled here
+        _r1 = ..
+    }
+    _r1.getA(); // .. etc ..
+
+	CombinedResult _r2 = _async.calculate(); // no exception
+	try {                       
+	    _r2.getA(); // exception thrown here!
+    } catch (Exception anExc) {
+        // exception thrown during calculation
+        // must be handled here
+    }
+    
+This is a problem - downstream classes have to deal with exceptions that they are potentially ill-equipped to deal with - hence this is still "experimental".
+
+One possible approach is to extend the service by allowing exception handlers and default-result factories to be specified in parameters to the `@ComputationallyIntensive` annotation. Feedback welcome...
 
 ## Cautionary Note
 
